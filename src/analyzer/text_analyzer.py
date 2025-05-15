@@ -15,12 +15,12 @@ class TextAnalyzer:
         # Suppress warnings
         warnings.filterwarnings('ignore', category=UserWarning)
         
-        # Determine device
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        # Force CPU usage
+        self.device = "cpu"
         
         model_names = [
             'paraphrase-MiniLM-L6-v2',  # Lighter model, try first
-            'paraphrase-MPNet-base-v2',  # More powerful but heavier
+            'all-MiniLM-L6-v2',  # Another light option
             'distilbert-base-nli-mean-tokens'  # Fallback option
         ]
         
