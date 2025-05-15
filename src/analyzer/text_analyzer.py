@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import torch
+import streamlit as st
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from typing import Dict, List, Tuple
@@ -11,18 +12,47 @@ import warnings
 
 class TextAnalyzer:
     def __init__(self):
-        # Suppress warnings about torch path
+        # Suppress warnings
         warnings.filterwarnings('ignore', category=UserWarning)
         
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        try:
-            self.model = SentenceTransformer('paraphrase-MPNet-base-v2')
-            self.model = self.model.to(self.device)
-        except Exception as e:
-            print(f"Error loading model: {str(e)}")
-            print("Attempting to use fallback model...")
-            self.model = SentenceTransformer('distilbert-base-nli-mean-tokens')
-            self.model = self.model.to(self.device)
+        # Initialize device safely
+        self.device = torch.device("cpu")  # Start with CPU as default
+        
+        model_names = [
+            'paraphrase-MiniLM-L6-v2',  # Lighter model, try first
+            'paraphrase-MPNet-base-v2',  # More powerful but heavier
+            'distilbert-base-nli-mean-tokens'  # Fallback option
+        ]
+        
+        self.model = None
+        last_error = None
+        
+        for model_name in model_names:
+            try:
+                st.info(f"Attempting to load model: {model_name}")
+                self.model = SentenceTransformer(model_name)
+                
+                # Try GPU if available
+                if torch.cuda.is_available():
+                    try:
+                        self.device = torch.device("cuda")
+                        self.model.to(self.device)
+                    except Exception:
+                        st.warning("GPU acceleration failed, falling back to CPU")
+                        self.device = torch.device("cpu")
+                        self.model.to(self.device)
+                
+                st.success(f"Successfully loaded model: {model_name}")
+                break
+                
+            except Exception as e:
+                last_error = str(e)
+                continue
+        
+        if self.model is None:
+            st.error(f"Failed to initialize any model. Last error: {last_error}")
+            raise RuntimeError("Could not initialize any model")
+        
         self._embedding_cache: Dict[str, np.ndarray] = {}
 
     @lru_cache(maxsize=1000)
