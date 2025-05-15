@@ -15,30 +15,17 @@ class TextAnalyzer:
         # Suppress warnings
         warnings.filterwarnings('ignore', category=UserWarning)
         
-        # Force CPU usage
-        self.device = "cpu"
-        
-        model_names = [
-            'paraphrase-MiniLM-L6-v2',  # Lighter model, try first
-            'all-MiniLM-L6-v2',  # Another light option
-            'distilbert-base-nli-mean-tokens'  # Fallback option
-        ]
-        
-        self.model = None
-        last_error = None
-        
-        for model_name in model_names:
-            try:
-                st.info(f"Attempting to load model: {model_name}")
-                # Initialize model with device specification
-                self.model = SentenceTransformer(model_name, device=self.device)
-                st.success(f"Successfully loaded model: {model_name}")
-                break
-                
-            except Exception as e:
-                last_error = str(e)
-                st.warning(f"Failed to load {model_name}: {str(e)}")
-                continue
+        try:
+            # Try the smallest, most reliable model first
+            st.info("Loading text analysis model...")
+            self.model = SentenceTransformer('all-MiniLM-L6-v2')
+            # Force CPU mode after loading
+            self.model.to('cpu')
+            st.success("Model loaded successfully!")
+            
+        except Exception as e:
+            st.error(f"Failed to initialize model: {str(e)}")
+            raise RuntimeError("Could not initialize model")
         
         if self.model is None:
             st.error(f"Failed to initialize any model. Last error: {last_error}")
