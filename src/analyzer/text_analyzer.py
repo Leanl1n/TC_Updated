@@ -15,8 +15,8 @@ class TextAnalyzer:
         # Suppress warnings
         warnings.filterwarnings('ignore', category=UserWarning)
         
-        # Initialize device safely
-        self.device = torch.device("cpu")  # Start with CPU as default
+        # Determine device
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         
         model_names = [
             'paraphrase-MiniLM-L6-v2',  # Lighter model, try first
@@ -30,23 +30,14 @@ class TextAnalyzer:
         for model_name in model_names:
             try:
                 st.info(f"Attempting to load model: {model_name}")
-                self.model = SentenceTransformer(model_name)
-                
-                # Try GPU if available
-                if torch.cuda.is_available():
-                    try:
-                        self.device = torch.device("cuda")
-                        self.model.to(self.device)
-                    except Exception:
-                        st.warning("GPU acceleration failed, falling back to CPU")
-                        self.device = torch.device("cpu")
-                        self.model.to(self.device)
-                
+                # Initialize model with device specification
+                self.model = SentenceTransformer(model_name, device=self.device)
                 st.success(f"Successfully loaded model: {model_name}")
                 break
                 
             except Exception as e:
                 last_error = str(e)
+                st.warning(f"Failed to load {model_name}: {str(e)}")
                 continue
         
         if self.model is None:
