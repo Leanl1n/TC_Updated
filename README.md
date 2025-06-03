@@ -35,7 +35,7 @@ topic-clustering/
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/yourusername/topic-clustering.git
+git clone https://github.com/Leanl1n/topic-clustering.git
 cd topic-clustering
 ```
 
